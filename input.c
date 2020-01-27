@@ -358,6 +358,44 @@ static bool input_cmpCov(struct dynfile_t* item1, struct dynfile_t* item2) {
 #define TAILQ_FOREACH_HF(var, head, field) \
     for ((var) = TAILQ_FIRST((head)); (var); (var) = TAILQ_NEXT((var), field))
 
+bool input_addDynamicExternalInput(run_t* run) {
+    static pthread_mutex_t input_mutex = PTHREAD_MUTEX_INITIALIZER;
+    if (time(0) <= run->global->timing.syncTime) {
+        return false;
+    }
+    MX_SCOPED_LOCK(&input_mutex);
+
+    struct dirent* entry = NULL;
+    DIR *dp = NULL;
+    dp = opendir(run->global->io.syncDir);
+    if (dp != NULL) {
+        while ((entry = readdir(dp))) {
+            char path[PATH_MAX];
+            snprintf(path, PATH_MAX, "%s/%s", run->global->io.syncDir, entry->d_name);
+            struct stat st;
+            if (stat(path, &st) == -1) {
+                LOG_W("Couldn't stat() the '%s' file", path);
+                continue;
+            }
+            if (!S_ISREG(st.st_mode)) {
+                LOG_D("'%s' is not a regular file, skipping", path);
+                continue;
+            }
+            ssize_t fileSz = files_readFileToBufMax(path, run->dynamicFile, run->global->mutate.maxFileSz);
+            if (fileSz < 0) {
+                LOG_E("Couldn't read contents of '%s'", path);
+                unlink(path);
+                continue;
+            }
+            input_setSize(run, fileSz);
+            unlink(path);
+            return true;
+        }
+    }
+    ATOMIC_SET(run->global->timing.syncTime, time(NULL) + run->global->io.syncInterval);
+    return false;
+}
+
 void input_addDynamicInput(
     honggfuzz_t* hfuzz, const uint8_t* data, size_t len, uint64_t cov[4], const char* path) {
     ATOMIC_SET(hfuzz->timing.lastCovUpdate, time(NULL));
