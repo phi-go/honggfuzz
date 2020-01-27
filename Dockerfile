@@ -1,4 +1,4 @@
-FROM ubuntu:rolling
+FROM ubuntu:19.10
 
 RUN apt-get -y update && apt-get install -y \
     gcc \
@@ -10,8 +10,10 @@ RUN apt-get -y update && apt-get install -y \
 	binutils-dev \
 && rm -rf /var/lib/apt/lists/* && rm -rf /honggfuzz
 
-RUN git clone --depth=1 https://github.com/google/honggfuzz.git
+RUN git clone --depth=1 https://github.com/phi-go/honggfuzz.git
 
 WORKDIR /honggfuzz
 
 RUN make && cp /honggfuzz/honggfuzz /bin
+
+WORKDIR /work

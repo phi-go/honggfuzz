@@ -279,6 +279,7 @@ bool cmdlineParse(int argc, char* argv[], honggfuzz_t* hfuzz) {
         .io =
             {
                 .inputDir = NULL,
+                .syncDir = NULL,
                 .outputDir = NULL,
                 .inputDirPtr = NULL,
                 .fileCnt = 0,
@@ -425,6 +426,8 @@ bool cmdlineParse(int argc, char* argv[], honggfuzz_t* hfuzz) {
     struct custom_option custom_opts[] = {
         { { "help", no_argument, NULL, 'h' }, "Help plz.." },
         { { "input", required_argument, NULL, 'i' }, "Path to a directory containing initial file corpus" },
+        { { "sync", required_argument, NULL, 'y' }, "Path to a directory containing sync files" },
+        { { "sync_interval", required_argument, NULL, 'Y' }, "Time in seconds to wait until checking the sync directory for new files." },
         { { "output", required_argument, NULL, 'o' }, "Output data (new dynamic coverage corpus, or the minimized coverage corpus) is written to this directory (default: input directory is re-used)" },
         { { "persistent", no_argument, NULL, 'P' }, "Enable persistent fuzzing (use hfuzz_cc/hfuzz-clang to compile code). This will be auto-detected!!!" },
         { { "instrument", no_argument, NULL, 'z' }, "*DEFAULT-MODE-BY-DEFAULT* Enable compile-time instrumentation (use hfuzz_cc/hfuzz-clang to compile code)" },
@@ -507,7 +510,7 @@ bool cmdlineParse(int argc, char* argv[], honggfuzz_t* hfuzz) {
     int opt_index = 0;
     for (;;) {
         int c = getopt_long(
-            argc, argv, "-?hQvVsuPxf:i:dqe:W:r:c:F:t:R:n:N:l:p:g:E:w:B:zMTS", opts, &opt_index);
+            argc, argv, "-?hQvVsuPxf:i:y:Y:dqe:W:r:c:F:t:R:n:N:l:p:g:E:w:B:zMTS", opts, &opt_index);
         if (c < 0) {
             break;
         }
@@ -520,6 +523,13 @@ bool cmdlineParse(int argc, char* argv[], honggfuzz_t* hfuzz) {
             case 'i':
             case 'f': /* Synonym for -i, stands for -f(iles) */
                 hfuzz->io.inputDir = optarg;
+                break;
+            case 'y':
+                hfuzz->io.syncDir = optarg;
+                hfuzz->timing.syncTime = 0;
+                break;
+            case 'Y':
+                hfuzz->io.syncInterval = atoll(optarg);
                 break;
             case 'x':
                 hfuzz->feedback.dynFileMethod = _HF_DYNFILE_NONE;

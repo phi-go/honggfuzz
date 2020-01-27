@@ -188,6 +188,8 @@ typedef struct {
     } threads;
     struct {
         const char* inputDir;
+        const char* syncDir;
+        time_t syncInterval;
         const char* outputDir;
         DIR* inputDirPtr;
         size_t fileCnt;
@@ -228,6 +230,7 @@ typedef struct {
         time_t runEndTime;
         time_t tmOut;
         time_t lastCovUpdate;
+        time_t syncTime;
         int64_t timeOfLongestUnitInMilliseconds;
         bool tmoutVTALRM;
     } timing;
