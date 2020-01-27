@@ -10,7 +10,7 @@ RUN apt-get -y update && apt-get install -y \
 	binutils-dev \
 && rm -rf /var/lib/apt/lists/* && rm -rf /honggfuzz
 
-RUN git clone --depth=1 https://github.com/phi-go/honggfuzz.git
+RUN git clone --depth=1 --single-branch --branch fuzzer_sync https://github.com/phi-go/honggfuzz.git
 
 WORKDIR /honggfuzz
 
