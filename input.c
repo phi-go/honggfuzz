@@ -35,6 +35,8 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/file.h>
+#include <fcntl.h>
 #include <unistd.h>
 
 #include "fuzz.h"
@@ -364,6 +366,7 @@ bool input_addDynamicExternalInput(run_t* run) {
         return false;
     }
     MX_SCOPED_LOCK(&input_mutex);
+    flock(run->global->io.syncLockFD, LOCK_EX);
 
     struct dirent* entry = NULL;
     DIR *dp = NULL;
@@ -389,10 +392,12 @@ bool input_addDynamicExternalInput(run_t* run) {
             }
             input_setSize(run, fileSz);
             unlink(path);
+            flock(run->global->io.syncLockFD, LOCK_UN);
             return true;
         }
     }
     ATOMIC_SET(run->global->timing.syncTime, time(NULL) + run->global->io.syncInterval);
+    flock(run->global->io.syncLockFD, LOCK_UN);
     return false;
 }
 

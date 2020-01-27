@@ -190,6 +190,7 @@ typedef struct {
         const char* inputDir;
         const char* syncDir;
         time_t syncInterval;
+        int syncLockFD;
         const char* outputDir;
         DIR* inputDirPtr;
         size_t fileCnt;

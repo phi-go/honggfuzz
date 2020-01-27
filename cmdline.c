@@ -39,6 +39,8 @@
 #include <sys/queue.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <unistd.h>
 
 #include "display.h"
@@ -518,6 +520,10 @@ bool cmdlineParse(int argc, char* argv[], honggfuzz_t* hfuzz) {
                 break;
             case 'y':
                 hfuzz->io.syncDir = optarg;
+                char* honggfuzz_name = basename(hfuzz->io.syncDir);
+                char lockfilePath[256];
+                snprintf(lockfilePath, 256, "%s/../%s.lock", hfuzz->io.syncDir, honggfuzz_name);
+                hfuzz->io.syncLockFD = fileno(fopen(lockfilePath, "w+"));
                 hfuzz->timing.syncTime = 0;
                 break;
             case 'Y':
