@@ -384,6 +384,7 @@ bool input_addDynamicExternalInput(run_t* run) {
                 LOG_D("'%s' is not a regular file, skipping", path);
                 continue;
             }
+            input_setSize(run, run->global->mutate.maxFileSz);
             ssize_t fileSz = files_readFileToBufMax(path, run->dynamicFile, run->global->mutate.maxFileSz);
             if (fileSz < 0) {
                 LOG_E("Couldn't read contents of '%s'", path);
@@ -393,6 +394,7 @@ bool input_addDynamicExternalInput(run_t* run) {
             input_setSize(run, fileSz);
             unlink(path);
             flock(run->global->io.syncLockFD, LOCK_UN);
+            closedir(dp);
             return true;
         }
     }
